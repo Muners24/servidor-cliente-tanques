@@ -113,10 +113,14 @@ void setupServerHandlers()
             active_sessions[session->id] = session;
         }
 
+        // 1. Configurar STUN e IceTcp
         rtc::Configuration rtcConfig;
-        rtcConfig.enableIceTcp = false;
+        rtcConfig.enableIceTcp = true; // Permite TCP si UDP está bloqueado
+        rtcConfig.iceServers.emplace_back("stun:stun.l.google.com:19302"); // Servidor STUN de Google
+
         session->pc = std::make_shared<rtc::PeerConnection>(rtcConfig);
 
+        // 2. Mapeo de candidatos ICE (los callbacks se mantienen igual)
         session->pc->onLocalCandidate([ws](rtc::Candidate candidate) {
             if (ws && ws->isOpen()) {
                 ws->send("CAND " + candidate.candidate() + "|" + candidate.mid());
@@ -376,7 +380,7 @@ void updateJuego()
 
     while (true)
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(16));
+        std::this_thread::sleep_for(std::chrono::milliseconds(8));
 
         mtx.lock();
         s = sonidos.begin();

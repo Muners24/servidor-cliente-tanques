@@ -12,7 +12,8 @@ Client::~Client()
 void Client::configConexion()
 {
     rtc::Configuration rtcConfig;
-    rtcConfig.enableIceTcp = false;
+    rtcConfig.enableIceTcp = true; // Habilitar TCP por si la red de la escuela bloquea UDP saliente
+    rtcConfig.iceServers.emplace_back("stun:stun.l.google.com:19302");
 
     pc = std::make_shared<rtc::PeerConnection>(rtcConfig);
     ws = std::make_shared<rtc::WebSocket>();
@@ -65,7 +66,8 @@ void Client::configConexion()
         });
     });
 
-    std::string wsUrl = "ws://" + ip + ":" + std::to_string(puerto);
+    std::string wsUrl = "ws://" + ip; 
+    std::cout << "[CLIENTE] Intentando conectar a: " << wsUrl << std::endl;
     ws->open(wsUrl);
 }
 
