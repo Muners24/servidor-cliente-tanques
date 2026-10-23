@@ -1,5 +1,5 @@
 #pragma once
-#include "..\t.h"
+#include "../t.h"
 #include "Tanque.h"
 
 typedef struct _zona

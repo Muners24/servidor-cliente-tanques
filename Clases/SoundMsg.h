@@ -1,4 +1,4 @@
-#include "..\t.h"
+#include "../t.h"
 
 typedef struct _soundmsg
 {

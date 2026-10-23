@@ -1,5 +1,5 @@
 #pragma once
-#include "..\t.h"
+#include "../t.h"
 
 typedef Rectangle _Obstaculo;
 

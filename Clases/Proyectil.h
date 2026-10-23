@@ -1,5 +1,5 @@
 #pragma once
-#include "..\t.h"
+#include "../t.h"
 #include "Obstaculo.h"
 
 typedef struct _proyectil
