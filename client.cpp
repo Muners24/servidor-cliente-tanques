@@ -32,6 +32,7 @@ void input();
 void view();
 void menu();
 void centerCamera(Camera2D &camara, Vector2 point);
+void inputCamera();
 
 // Peticiones al servidor
 void sendRequestHeader(uint8_t header);
@@ -72,6 +73,7 @@ string ms;
 
 Camera2D camara;
 int bits[7];
+Tanque temp;
 
 Client client;
 
@@ -337,12 +339,11 @@ void view()
         return;
     }
 
-    Camera2D camara;
     float actual_pitch = 1.0f;
     char buffer1[10];
     char buffer2[10];
     int listo = 0;
-    Tanque temp = Tanque(colors[sel_color], -1);
+    temp = Tanque(colors[sel_color], -1);
 
     initCamara(camara);
     initTexture();
@@ -438,6 +439,8 @@ void view()
             zona.getPrc(temp);
         }
         centerCamera(camara, temp.getCentro());
+        inputCamera();
+        
 
         drawEscudoCd(temp);
         drawVida(temp);
@@ -473,14 +476,16 @@ void view()
     CloseWindow();
 }
 
+
+
 void inputT()
 {
-    bits[0] = IsKeyDown(KEY_A) ? 1 : 0;
-    bits[1] = IsKeyDown(KEY_W) ? 1 : 0;
-    bits[2] = IsKeyDown(KEY_S) ? 1 : 0;
-    bits[3] = IsKeyDown(KEY_D) ? 1 : 0;
-    bits[4] = IsKeyDown(KEY_O) ? 1 : 0;
-    bits[5] = IsKeyDown(KEY_P) ? 1 : 0;
+    bits[0] = IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT) ? 1 : 0;
+    bits[1] = IsKeyDown(KEY_W) || IsKeyDown(KEY_UP) ? 1 : 0;
+    bits[2] = IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN) ? 1 : 0;
+    bits[3] = IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT) ? 1 : 0;
+    bits[4] = IsKeyDown(KEY_O) || IsMouseButtonDown(MOUSE_BUTTON_LEFT) ? 1 : 0;
+    bits[5] = IsKeyDown(KEY_P) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ? 1 : 0;
     bits[6] = client.id;
 }
 
@@ -509,7 +514,7 @@ void initCamara(Camera2D &camara)
     camara.offset.x = GetScreenWidth() / 2.0f;
     camara.offset.y = GetScreenHeight() / 2.0f;
     camara.rotation = 0;
-    camara.zoom = 0.8f;
+    camara.zoom = 0.6;
 }
 
 void initTexture()
@@ -575,9 +580,9 @@ void initColors()
 
 void drawSuelo()
 {
-    for (int y = -RALTO; y < BORDE_DOWN + RALTO; y += 160)
+    for (int y = -RALTO-160; y < BORDE_DOWN + RALTO + 160; y += 160)
     {
-        for (int x = -RANCHO; x < BORDE_RIGHT + RANCHO; x += 160)
+        for (int x = -RANCHO-160; x < BORDE_RIGHT + RANCHO + 160; x += 160)
         {
             DrawTexture(losa, x, y, WHITE);
         }
@@ -854,9 +859,26 @@ void centerCamera(Camera2D &camara, Vector2 point)
     if (camara.target.y < point.y) camara.target.y += 2;
     if (camara.target.x > point.x) camara.target.x -= 2;
     if (camara.target.y > point.y) camara.target.y -= 2;
+}
 
-    if (IsKeyPressed(KEY_SPACE))
+void inputCamera()
+{
+    Vector2 point = temp.getCentro();
+
+    if (IsKeyDown(KEY_SPACE))
     {
-        camara.target = point;
+        camara.target.x = point.x;
+        camara.target.y = point.y;
+    }
+
+    float wheel = GetMouseWheelMove();
+    if (wheel != 0.0f)
+    {
+        float newZoom = camara.zoom + (wheel * 0.05f);
+
+        if (newZoom > MAX_ZOOM) newZoom = MAX_ZOOM;
+        if (newZoom < MIN_ZOOM) newZoom = MIN_ZOOM;
+
+        camara.zoom = newZoom;
     }
 }

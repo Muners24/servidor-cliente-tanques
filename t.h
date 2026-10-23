@@ -47,6 +47,10 @@ using std::map;
 #define RANCHO 1600.f
 #define RALTO 960.f
 
+#define DEFAULT_ZOOM 0.8f
+#define MAX_ZOOM 1.2f
+#define MIN_ZOOM 0.6f
+
 #define CASILLA 80.f
 #define BORDE_LEFT 0.0f 
 #define BORDE_UP 0.0f
