@@ -12,7 +12,7 @@ Client::~Client()
 void Client::configConexion()
 {
     rtc::Configuration rtcConfig;
-    rtcConfig.enableIceTcp = true; // Habilitar TCP por si la red de la escuela bloquea UDP saliente
+    rtcConfig.enableIceTcp = true; // Habilitar TCP para eludir firewalls restrictivos
     rtcConfig.iceServers.emplace_back("stun:stun.l.google.com:19302");
 
     pc = std::make_shared<rtc::PeerConnection>(rtcConfig);
@@ -66,7 +66,16 @@ void Client::configConexion()
         });
     });
 
-    std::string wsUrl = "ws://" + ip; 
+    // --- CONSTRUCCIÓN DINÁMICA DE LA URL ---
+    std::string wsUrl;
+    if (ip.find("onrender.com") != std::string::npos) {
+        // En Render usamos Secure WebSockets (wss://) sin puerto explícito (puerto 443 implícito)
+        wsUrl = "wss://" + ip;
+    } else {
+        // En local usamos ws:// con el puerto asignado (ej. 8080)
+        wsUrl = "ws://" + ip + ":" + std::to_string(puerto);
+    }
+
     std::cout << "[CLIENTE] Intentando conectar a: " << wsUrl << std::endl;
     ws->open(wsUrl);
 }

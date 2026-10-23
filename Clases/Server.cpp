@@ -13,6 +13,7 @@ void Server::configServer() {
 
     rtc::WebSocketServer::Configuration wsConfig;
     wsConfig.port = static_cast<uint16_t>(SERVER_PORT);
+    wsConfig.enableTls = false; // IMPORTANTE: False porque Render maneja SSL/TLS públicamente en el proxy
 
     wss = std::make_unique<rtc::WebSocketServer>(wsConfig);
 
