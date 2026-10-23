@@ -99,6 +99,7 @@ void sendData(ClientSession& session, const void* data, size_t size) {
 void setupServerHandlers()
 {
     server.onClient([](std::shared_ptr<rtc::WebSocket> ws) {
+        std::cout << "[SERVER] Nueva conexión WebSocket de signaling recibida." << std::endl;
         auto session = std::make_shared<ClientSession>();
         session->ws = ws;
 
