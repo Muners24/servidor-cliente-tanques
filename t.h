@@ -41,7 +41,7 @@ using std::list;
 using std::cout;
 using std::map;
 
-#define IP "127.0.0.1"
+#define IP "servidor-cliente-tanques.onrender.com"
 #define PUERTO 8080
 
 #define RANCHO 1600.f

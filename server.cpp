@@ -99,25 +99,28 @@ void sendDataWithHeader(ClientSession& session, uint8_t header, const void* data
 void setupServerHandlers()
 {
     server.onClient([](std::shared_ptr<rtc::WebSocket> ws) {
-        std::cout << "[LOG-WS] ===== NUEVA CONEXIÓN WEBSOCKET RECIBIDA =====" << std::endl;
-        
+        std::cout << "[LOG-WS] Solicitud de conexión WebSocket entrante..." << std::endl;
+
         auto session = std::make_shared<ClientSession>();
         session->ws = ws;
 
-        {
-            std::lock_guard<std::mutex> lock(mtx);
-            session->id = cont_tanque++;
-            clients_id.push_back(session->id);
-        }
+        // Registrar callbacks cuando la conexión WS esté realmente ABIERTA y confirmada
+        ws->onOpen([session]() {
+            {
+                std::lock_guard<std::mutex> lock(mtx);
+                session->id = cont_tanque++;
+                clients_id.push_back(session->id);
+            }
 
-        {
-            std::lock_guard<std::mutex> lock(mtx_sessions);
-            active_sessions[session->id] = session;
-        }
+            {
+                std::lock_guard<std::mutex> lock(mtx_sessions);
+                active_sessions[session->id] = session;
+            }
 
-        std::cout << "[LOG-WS] Sesión creada asignada a ID: " << session->id << std::endl;
+            std::cout << "[LOG-WS] Handshake completado. Sesión creada e iniciada con ID: " << session->id << std::endl;
+        });
 
-        // Configuración WebRTC
+        // Configuración de WebRTC
         rtc::Configuration rtcConfig;
         rtcConfig.enableIceTcp = true;
         rtcConfig.iceServers.emplace_back("stun:stun.l.google.com:19302");

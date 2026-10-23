@@ -77,24 +77,8 @@ Client client;
 
 int main()
 {
-
-    std::string targetIP = IP; // IP por defecto definida en t.h (ej: 127.0.0.1)
-
-    std::ifstream file("ip.txt");
-    if (file.is_open())
-    {
-        std::string ipLeida;
-        if (file >> ipLeida && !ipLeida.empty())
-        {
-            targetIP = ipLeida;
-            std::cout << "[CONFIG] IP cargada desde IP.txt: " << targetIP << std::endl;
-        }
-        file.close();
-    }
-    else
-    {
-        std::cout << "[CONFIG] IP.txt no encontrado. Usando IP por defecto: " << targetIP << std::endl;
-    }
+    std::string targetIP = IP; 
+    std::cout << "[CONFIG] Conectando directamente a la IP definida en t.h: " << targetIP << std::endl;
 
     client = Client(targetIP, PUERTO);
 

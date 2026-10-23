@@ -13,7 +13,7 @@ void Server::configServer() {
 
     rtc::WebSocketServer::Configuration wsConfig;
     wsConfig.port = static_cast<uint16_t>(SERVER_PORT);
-    wsConfig.enableTls = false; // IMPORTANTE: False porque Render maneja SSL/TLS públicamente en el proxy
+    wsConfig.enableTls = false; // Render gestiona el cifrado TLS externamente
 
     wss = std::make_unique<rtc::WebSocketServer>(wsConfig);
 
@@ -22,7 +22,17 @@ void Server::configServer() {
 
 void Server::onClient(std::function<void(std::shared_ptr<rtc::WebSocket>)> handler) {
     if (wss) {
-        wss->onClient(handler);
+        wss->onClient([handler](std::shared_ptr<rtc::WebSocket> ws) {
+            // Configuración del WebSocket entrante para capturar la apertura exitosa
+            ws->onOpen([ws]() {
+                std::cout << "[LOG-WS] SUCCESS: Handshake completado exitosamente." << std::endl;
+            });
+
+            // Pasar el socket al manejador principal de la app
+            if (handler) {
+                handler(ws);
+            }
+        });
     }
 }
 
