@@ -41,7 +41,7 @@ using std::list;
 using std::cout;
 using std::map;
 
-#define IP "servidor-cliente-tanques.onrender.com"
+#define IP "20.237.187.228"
 #define PUERTO 8080
 
 #define RANCHO 1600.f
@@ -55,7 +55,7 @@ using std::map;
 
 #define COLUMNAS BORDE_RIGHT/CASILLA
 #define FILAS BORDE_DOWN/CASILLA
-#define TANKV 5.0f
+#define TANKV 3.3f
 #define TANKH 60.f
 #define TANKW 80.f
 #define TANKDIAG sqrt((TANKH / 2.f) * (TANKH / 2.f) + (TANKW / 2.f) * (TANKW / 2.f))
@@ -65,7 +65,7 @@ using std::map;
 #define TANK_ESC_CD 300
 #define TANK_ESC_DUR 90
 
-#define VEL_PYTL 10.0f
+#define VEL_PYTL 4.8f
 #define RAD_PYTL 9.f
 #define DELTA_DIR 2.6
 #define VEL_ATK 45

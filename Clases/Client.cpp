@@ -66,15 +66,9 @@ void Client::configConexion()
         });
     });
 
-    // --- CONSTRUCCIÓN DINÁMICA DE LA URL ---
     std::string wsUrl;
-    if (ip.find("onrender.com") != std::string::npos) {
-        // En Render usamos Secure WebSockets (wss://) sin puerto explícito (puerto 443 implícito)
-        wsUrl = "wss://" + ip;
-    } else {
-        // En local usamos ws:// con el puerto asignado (ej. 8080)
-        wsUrl = "ws://" + ip + ":" + std::to_string(puerto);
-    }
+    wsUrl = "ws://" + ip + ":" + std::to_string(puerto);
+
 
     std::cout << "[CLIENTE] Intentando conectar a: " << wsUrl << std::endl;
     ws->open(wsUrl);
