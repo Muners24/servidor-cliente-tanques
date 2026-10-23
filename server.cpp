@@ -99,6 +99,8 @@ void sendDataWithHeader(ClientSession& session, uint8_t header, const void* data
 void setupServerHandlers()
 {
     server.onClient([](std::shared_ptr<rtc::WebSocket> ws) {
+        std::cout << "[LOG-WS] ===== NUEVA CONEXIÓN WEBSOCKET RECIBIDA =====" << std::endl;
+        
         auto session = std::make_shared<ClientSession>();
         session->ws = ws;
 
@@ -109,33 +111,60 @@ void setupServerHandlers()
         }
 
         {
-            std::lock_guard<std::mutex> lock_sess(mtx_sessions);
+            std::lock_guard<std::mutex> lock(mtx_sessions);
             active_sessions[session->id] = session;
         }
 
+        std::cout << "[LOG-WS] Sesión creada asignada a ID: " << session->id << std::endl;
+
+        // Configuración WebRTC
         rtc::Configuration rtcConfig;
-        rtcConfig.enableIceTcp = false;
+        rtcConfig.enableIceTcp = true;
+        rtcConfig.iceServers.emplace_back("stun:stun.l.google.com:19302");
+
         session->pc = std::make_shared<rtc::PeerConnection>(rtcConfig);
 
-        session->pc->onLocalCandidate([ws](rtc::Candidate candidate) {
+        // Logs para estado del PeerConnection
+        session->pc->onStateChange([](rtc::PeerConnection::State state) {
+            std::cout << "[LOG-RTC] Estado PeerConnection cambió a: " << (int)state << std::endl;
+        });
+
+        session->pc->onIceStateChange([](rtc::PeerConnection::IceState state) {
+            std::cout << "[LOG-RTC] Estado ICE cambió a: " << (int)state << std::endl;
+        });
+
+        // Callback para candidatos localmente generados
+        session->pc->onLocalCandidate([ws, id = session->id](rtc::Candidate candidate) {
+            std::cout << "[LOG-ICE] Servidor generó candidato ICE local para Cliente " << id << ": " << candidate.candidate() << std::endl;
             if (ws && ws->isOpen()) {
                 ws->send("CAND " + candidate.candidate() + "|" + candidate.mid());
+            } else {
+                std::cout << "[LOG-ICE] ERROR: WS no está abierto al enviar candidato local." << std::endl;
             }
         });
 
-        session->pc->onLocalDescription([ws](rtc::Description description) {
+        // Callback para SDP generado localmente
+        session->pc->onLocalDescription([ws, id = session->id](rtc::Description description) {
+            std::cout << "[LOG-SDP] Servidor generó SDP local (Answer) para Cliente " << id << std::endl;
             if (ws && ws->isOpen()) {
                 ws->send("SDP " + std::string(description));
+            } else {
+                std::cout << "[LOG-SDP] ERROR: WS no está abierto al enviar SDP local." << std::endl;
             }
         });
 
+        // Callback cuando el cliente abre un DataChannel
         session->pc->onDataChannel([session](std::shared_ptr<rtc::DataChannel> incomingDc) {
+            std::cout << "[LOG-DC] Cliente " << session->id << " intentando abrir DataChannel con label: " << incomingDc->label() << std::endl;
             session->dc = incomingDc;
 
             session->dc->onOpen([session]() {
-                std::cout << "[SERVIDOR] DataChannel abierto para Cliente ID: " << session->id << std::endl;
+                std::cout << "[LOG-DC] SUCCESS: DataChannel ABIERTO con éxito para Cliente " << session->id << std::endl;
                 sendId(*session);
-                sendObstaculos(*session);
+            });
+
+            session->dc->onError([](std::string error) {
+                std::cout << "[LOG-DC] ERROR en DataChannel: " << error << std::endl;
             });
 
             session->dc->onMessage([session](std::variant<rtc::binary, rtc::string> message) {
@@ -146,61 +175,57 @@ void setupServerHandlers()
                     uint8_t header = std::to_integer<uint8_t>(rawData[0]);
                     switch (header)
                     {
-                    case SEND_OBSTACULOS:
-                        sendObstaculos(*session);
-                        break;
-                    case SEND_PROYECTILES:
-                        sendProyectiles(*session);
-                        break;
-                    case SEND_SONIDOS:
-                        sendSonidos(*session, rawData);
-                        break;
-                    case SEND_TANQUES:
-                        sendTanques(*session);
-                        break;
-                    case SEND_ZONAS:
-                        sendZonas(*session);
-                        break;
-                    case SEND_ID:
-                        std::cout << "[SERVIDOR] Petición SEND_ID recibida de Cliente ID: " << session->id << std::endl;
-                        sendId(*session);
-                        break;
-                    case SEND_INPUT:
-                        recvInput(*session, rawData);
-                        break;
-                    case SEND_COLOR:
-                        std::cout << "[SERVIDOR] Petición SEND_COLOR recibida de Cliente ID: " << session->id << std::endl;
-                        recvColor(*session, rawData);
-                        break;
-                    case SEND_DISCONNECT:
-                        recvDiscon(*session, rawData);
-                        break;
-                    default:
-                        break;
+                    case SEND_OBSTACULOS:  sendObstaculos(*session); break;
+                    case SEND_PROYECTILES: sendProyectiles(*session); break;
+                    case SEND_SONIDOS:    sendSonidos(*session, rawData); break;
+                    case SEND_TANQUES:    sendTanques(*session); break;
+                    case SEND_ZONAS:      sendZonas(*session); break;
+                    case SEND_ID:         sendId(*session); break;
+                    case SEND_INPUT:      recvInput(*session, rawData); break;
+                    case SEND_COLOR:      recvColor(*session, rawData); break;
+                    case SEND_DISCONNECT: recvDiscon(*session, rawData); break;
+                    default: break;
                     }
                 }
             });
 
             session->dc->onClosed([session]() {
-                std::cout << "[SERVIDOR] DataChannel cerrado para Cliente ID: " << session->id << std::endl;
+                std::cout << "[LOG-DC] DataChannel CERRADO para Cliente " << session->id << std::endl;
                 std::vector<std::byte> dummy;
                 recvDiscon(*session, dummy);
             });
         });
 
+        // Escuchar mensajes entrantes desde el cliente vía WebSocket
         ws->onMessage([session](std::variant<rtc::binary, rtc::string> message) {
             if (std::holds_alternative<rtc::string>(message)) {
                 std::string msg = std::get<rtc::string>(message);
+                
                 if (msg.rfind("SDP ", 0) == 0) {
+                    std::cout << "[LOG-MSG] Oferta SDP recibida del Cliente " << session->id << std::endl;
                     session->pc->setRemoteDescription(rtc::Description(msg.substr(4), "offer"));
+                    
+                    // Asegurar que se genera la respuesta local
+                    session->pc->setLocalDescription();
                 } else if (msg.rfind("CAND ", 0) == 0) {
+                    std::cout << "[LOG-MSG] Candidato ICE recibido del Cliente " << session->id << std::endl;
                     std::string data = msg.substr(5);
                     auto pos = data.find('|');
                     if (pos != std::string::npos) {
                         session->pc->addRemoteCandidate(rtc::Candidate(data.substr(0, pos), data.substr(pos + 1)));
                     }
+                } else {
+                    std::cout << "[LOG-MSG] Mensaje texto desconocido vía WS: " << msg << std::endl;
                 }
             }
+        });
+
+        ws->onClosed([id = session->id]() {
+            std::cout << "[LOG-WS] Conexión WebSocket CERRADA para Cliente " << id << std::endl;
+        });
+
+        ws->onError([](std::string error) {
+            std::cout << "[LOG-WS] ERROR en WebSocket: " << error << std::endl;
         });
     });
 }
