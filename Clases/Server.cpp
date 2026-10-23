@@ -13,26 +13,19 @@ void Server::configServer() {
 
     rtc::WebSocketServer::Configuration wsConfig;
     wsConfig.port = static_cast<uint16_t>(SERVER_PORT);
-    wsConfig.enableTls = false; // Render gestiona el cifrado TLS externamente
+    wsConfig.enableTls = false;
+    
+    // PERMITIR CONEXIONES DESDE PROXIES INVERSOS (RENDER)
+    wsConfig.bindAddress = "0.0.0.0";
 
     wss = std::make_unique<rtc::WebSocketServer>(wsConfig);
 
-    std::cout << "Servidor de Signaling WebRTC escuchando en el puerto " << SERVER_PORT << std::endl;
+    std::cout << "Servidor de Signaling WebRTC escuchando en 0.0.0.0:" << SERVER_PORT << std::endl;
 }
 
 void Server::onClient(std::function<void(std::shared_ptr<rtc::WebSocket>)> handler) {
     if (wss) {
-        wss->onClient([handler](std::shared_ptr<rtc::WebSocket> ws) {
-            // Configuración del WebSocket entrante para capturar la apertura exitosa
-            ws->onOpen([ws]() {
-                std::cout << "[LOG-WS] SUCCESS: Handshake completado exitosamente." << std::endl;
-            });
-
-            // Pasar el socket al manejador principal de la app
-            if (handler) {
-                handler(ws);
-            }
-        });
+        wss->onClient(handler);
     }
 }
 
