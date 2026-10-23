@@ -4,16 +4,15 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "C:/Program Files (x86)/SDL2/include/SDL2",
-                "C:/Program Files (x86)/SDL3/include"
+                "C:/tanques/libdatachannel/include",
+                "C:/raylib/w64devkit/x86_64-w64-mingw32/include"
             ],
             "defines": [
                 "_DEBUG",
                 "UNICODE",
                 "_UNICODE"
             ],
-            "windowsSdkVersion": "10.0.22621.0",
-            "compilerPath": "C:\\raylib\\w64devkit\\bin\\g++.exe",
+            "compilerPath": "C:/winlibs/bin/g++.exe",
             "cStandard": "c17",
             "cppStandard": "c++17",
             "intelliSenseMode": "windows-gcc-x64"

@@ -1,0 +1,39 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "Compilar Cliente Raylib (UDP)",
+            "command": "C:/winlibs/bin/g++.exe",
+            "args": [
+                "-std=c++17",
+                "${file}",
+                "-o",
+                "${fileDirname}/${fileBasenameNoExtension}.exe",
+                "-I", "C:/tanques/libdatachannel/include",
+                "-I", "C:/raylib/w64devkit/x86_64-w64-mingw32/include",
+                "-L", "C:/tanques/libdatachannel/build",
+                "-L", "C:/tanques/mbedtls_install/lib",
+                "-L", "C:/raylib/w64devkit/x86_64-w64-mingw32/lib",
+                "-static-libgcc",
+                "-static-libstdc++",
+                "-lraylib",
+                "-ldatachannel",
+                "-lmbedtls",
+                "-lmbedcrypto",
+                "-lmbedx509",
+                "-lopengl32",
+                "-lgdi32",
+                "-lwinmm",
+                "-lws2_32",
+                "-liphlpapi",
+                "-lcrypt32"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": ["$gcc"]
+        }
+    ]
+}

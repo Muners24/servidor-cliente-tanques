@@ -1,28 +1,36 @@
 #pragma once
-#include <ws2tcpip.h>
-#include <winsock2.h>
-#include <string.h>
-#include <stdio.h>
-#include <cstring>
-#include <stdlib.h>
-#include <raylib.h>
+
+// 1. Macros de exclusión de Windows para evitar conflictos con Raylib (Rectangle, CloseWindow, etc.)
+#define NOGDI
+#define NOUSER
+#define WIN32_LEAN_AND_MEAN
+
+// 2. Cabeceras del sistema y biblioteca estándar de C++
 #include <iostream>
-#include <unordered_map>
-#include <sstream>
-#include <future>
 #include <string>
-#include <thread>
-#include <chrono>
+#include <cstring>
+#include <cstdio>
+#include <cstdlib>
+#include <cstddef>
+#include <cmath>
 #include <vector>
 #include <array>
-#include <cmath>
-#include <mutex>
 #include <queue>
 #include <list>
 #include <map>
+#include <unordered_map>
+#include <sstream>
+#include <thread>
+#include <chrono>
+#include <mutex>
+#include <future>
+
+#include "raylib.h"
+#include "rtc/rtc.hpp"
 
 using std::unordered_map;
 using std::to_string;
+using std::lock_guard;
 using std::vector;
 using std::string;
 using std::thread;
@@ -33,7 +41,7 @@ using std::list;
 using std::cout;
 using std::map;
 
-#define IP "192.168.100.3"
+#define IP "127.0.0.1"
 #define PUERTO 12345
 
 #define RANCHO 1600.f

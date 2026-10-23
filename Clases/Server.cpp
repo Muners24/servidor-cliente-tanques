@@ -1,59 +1,33 @@
 #include "Server.h"
-#include <stdexcept>
-#include <string>
-#include <winsock2.h>
-#include <ws2tcpip.h>
 
-Server::Server(int puerto)
-{
-    SERVER_PORT = puerto;
+Server::Server() : SERVER_PORT(8080) {}
+
+Server::Server(int puerto) : SERVER_PORT(puerto) {}
+
+Server::~Server() {
+    closeServer();
 }
 
-void Server::configServer()
-{
-    // Inicializar Winsock
-    if (WSAStartup(MAKEWORD(2, 2), &wsData) != 0)
-    {
-        std::cerr << "Error al inicializar Winsock." << std::endl;
-        return;
-    }
+void Server::configServer() {
+    rtc::InitLogger(rtc::LogLevel::Warning);
 
-    // Crear el socket
-    serverSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (serverSocket == INVALID_SOCKET)
-    {
-        std::cerr << "Error al crear el socket." << std::endl;
-        WSACleanup();
-        return;
-    }
+    rtc::WebSocketServer::Configuration wsConfig;
+    wsConfig.port = static_cast<uint16_t>(SERVER_PORT);
 
-    // Configurar la dirección del servidor
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(SERVER_PORT);
-    serverAddr.sin_addr.s_addr = INADDR_ANY; // Aceptar conexiones desde cualquier dirección
+    wss = std::make_unique<rtc::WebSocketServer>(wsConfig);
 
-    // Vincular el socket
-    if (bind(serverSocket, (sockaddr *)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
-    {
-        std::cerr << "Error al vincular el socket." << std::endl;
-        closesocket(serverSocket);
-        WSACleanup();
-        return;
-    }
-
-    //Activa no bloqueante
-    //u_long mode;
-    // Obtener el modo del socket
-    //if (ioctlsocket(serverSocket, FIONBIO, &mode) != 0)
-    //{
-    //    perror("ioctlsocket falló");
-    //}
-
-    std::cout << "Servidor UDP configurado en el puerto " << SERVER_PORT << std::endl;
+    std::cout << "Servidor de Signaling WebRTC escuchando en el puerto " << SERVER_PORT << std::endl;
 }
 
-void Server::closeServer()
-{
-    closesocket(serverSocket);
-    WSACleanup();
+void Server::onClient(std::function<void(std::shared_ptr<rtc::WebSocket>)> handler) {
+    if (wss) {
+        wss->onClient(handler);
+    }
+}
+
+void Server::closeServer() {
+    if (wss) {
+        wss.reset();
+        std::cout << "Servidor cerrado correctamente." << std::endl;
+    }
 }

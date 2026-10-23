@@ -1,18 +1,23 @@
-#include "..\t.h"
+#pragma once
+#include <iostream>
+#include <memory>
+#include <functional>
+#include "rtc/rtc.hpp"
 
-class Server
-{
-    addrinfo conf;
-    SOCKET serverSocket;
-    WSADATA wsData;
-    sockaddr_in serverAddr;
+class Server {
+private:
     int SERVER_PORT;
-    
-public:
+    std::unique_ptr<rtc::WebSocketServer> wss;
 
-    Server(){};
+public:
+    Server();
     Server(int puerto);
+    ~Server();
+
     void configServer();
-    SOCKET getSocket(){ return serverSocket;};
+    
+    void onClient(std::function<void(std::shared_ptr<rtc::WebSocket>)> handler);
+
+    rtc::WebSocketServer* getWSServer() const { return wss.get(); }
     void closeServer();
 };
