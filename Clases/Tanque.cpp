@@ -424,35 +424,77 @@ void Tanque::colisionBorde()
 
 void Tanque::colisionObs(list<Obstaculo> obstaculos)
 {
-    Rectangle rec;
     colision_obs = false;
     in_obs = false;
+
+    Vector2 target_pos = {pos.x,pos.y};
+
+    pos.x = target_pos.x;
+    pos.y = last_pos.y;
+    area();
+
+    bool colision_x = false;
     for (auto &obs : obstaculos)
     {
-        rec = obs.getRec();
-        if (CheckCollisionPointRec(front.vertice[1], rec) || CheckCollisionPointRec(front.vertice[2], rec))
+        Rectangle rec = obs.getRec();
+        if ((wasd.up && (CheckCollisionPointRec(front.vertice[1], rec) || CheckCollisionPointRec(front.vertice[2], rec))) ||
+            (wasd.down && (CheckCollisionPointRec(back.vertice[1], rec) || CheckCollisionPointRec(back.vertice[2], rec))))
         {
-            if (wasd.up)
-            {
-                pos.x = last_pos.x;
-                pos.y = last_pos.y;
-                colision_obs = true;
-            }
+            colision_x = true;
+            break;
         }
+    }
 
-        if (CheckCollisionPointRec(back.vertice[1], rec) || CheckCollisionPointRec(back.vertice[2], rec))
+    pos.x = last_pos.x;
+    pos.y = target_pos.y;
+    area(); 
+
+    bool colision_y = false;
+    for (auto &obs : obstaculos)
+    {
+        Rectangle rec = obs.getRec();
+        if ((wasd.up && (CheckCollisionPointRec(front.vertice[1], rec) || CheckCollisionPointRec(front.vertice[2], rec))) ||
+            (wasd.down && (CheckCollisionPointRec(back.vertice[1], rec) || CheckCollisionPointRec(back.vertice[2], rec))))
         {
-            if (wasd.down)
-            {
-                pos.x = last_pos.x;
-                pos.y = last_pos.y;
-                colision_obs = true;
-            }
+            colision_y = true;
+            break;
         }
+    }
 
-        if (CheckCollisionPointRec(canon(), rec))
+    // --- PASO 3: Resolver posición final según qué ejes chocaron ---
+    if (colision_x && colision_y)
+    {
+        pos.x = last_pos.x;
+        pos.y = last_pos.y;
+
+        colision_obs = true;
+    }
+    else if (colision_x)
+    {
+        pos.x = last_pos.x;
+        pos.y = target_pos.y;
+        colision_obs = true;
+    }
+    else if (colision_y)
+    {
+        pos.x = target_pos.x;
+        pos.y = last_pos.y;
+        colision_obs = true;
+    }
+    else
+    {
+        pos.x = target_pos.x;
+        pos.y = target_pos.y;
+    }
+
+    area();
+
+    for (auto &obs : obstaculos)
+    {
+        if (CheckCollisionPointRec(canon(), obs.getRec()))
         {
             in_obs = true;
+            break;
         }
     }
 }
