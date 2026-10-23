@@ -38,11 +38,11 @@ RUN git clone https://github.com/raysan5/raylib.git && \
 WORKDIR /app
 COPY . .
 
-# Compilar el servidor de C++
+# Compilar el servidor de C++ incluyendo las librerias X11 que pide raylib
 RUN g++ -std=c++17 server.cpp Clases/Server.cpp Clases/Tanque.cpp Clases/Obstaculo.cpp Clases/Zona.cpp Clases/Proyectil.cpp Clases/SoundMsg.cpp \
     -o server \
     -I. -IClases \
-    -ldatachannel -lraylib -lpthread -ldl
+    -ldatachannel -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
 
 # Imagen final liviana
 FROM ubuntu:22.04
@@ -51,6 +51,7 @@ RUN apt-get update && apt-get install -y \
     libssl3 \
     libstdc++6 \
     libgl1 \
+    libx11-6 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
